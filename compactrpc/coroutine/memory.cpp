@@ -4,7 +4,7 @@
  * @Autor: Yogaguo
  * @Date: 2022-12-09 21:24:15
  * @LastEditors: Yogaguo
- * @LastEditTime: 2022-12-09 22:17:55
+ * @LastEditTime: 2022-12-11 13:11:28
  */
 #include <sys/mman.h>
 #include <assert.h>
@@ -20,6 +20,7 @@ namespace compactrpc
         m_start = (char *)malloc(m_size);
 
         assert(m_size != (void *)-1);
+
         InfoLog << "succ mmap" << m_size << "bytes memory";
         m_end = m_start + m_size;
         m_blocks.resize(m_block_count);
@@ -55,7 +56,7 @@ namespace compactrpc
 
     char *Memory::getBlock()
     {
-        int t - -1;
+        int t = -1;
         Mutex::Lock lock(m_mutex);
         for (size_t i = 0; i < m_blocks.size(); i++)
         {

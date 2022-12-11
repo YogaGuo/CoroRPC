@@ -4,7 +4,7 @@
  * @Autor: Yogaguo
  * @Date: 2022-12-09 21:16:54
  * @LastEditors: Yogaguo
- * @LastEditTime: 2022-12-09 22:12:58
+ * @LastEditTime: 2022-12-11 12:56:38
  */
 #ifndef COMPACTRPC_MEMORY_H
 #define COMPACTRPC_MEMORY_H
@@ -31,7 +31,7 @@ namespace compactrpc
 
         char *getBlock();
 
-        bool hasBlock();
+        bool hasBlock(char *);
 
         void backBlock(char *);
 
