@@ -217,7 +217,7 @@ namespace compactrpc
 
         int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
         {
-            if (!compactrpc::g_hook || !compactrpc::Coroutine::GetCoroutineSwapFlag())
+            if (!compactrpc::g_hook)
             {
                 return g_sys_accept_fun(sockfd, addr, addrlen);
             }
@@ -229,7 +229,7 @@ namespace compactrpc
 
         ssize_t read(int fd, void *buf, size_t count)
         {
-            if (!compactrpc::g_hook || !compactrpc::Coroutine::GetCoroutineSwapFlag())
+            if (!compactrpc::g_hook)
             {
                 return g_sys_read_fun(fd, buf, count);
             }
@@ -241,7 +241,7 @@ namespace compactrpc
 
         ssize_t write(int fd, const void *buf, size_t count)
         {
-            if (!compactrpc::g_hook || !compactrpc::Coroutine::GetCoroutineSwapFlag())
+            if (!compactrpc::g_hook)
             {
                 return g_sys_write_fun(fd, buf, count);
             }
@@ -253,7 +253,7 @@ namespace compactrpc
 
         int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
         {
-            if (!compactrpc::g_hook || !compactrpc::Coroutine::GetCoroutineSwapFlag())
+            if (!compactrpc::g_hook)
             {
                 return g_sys_connect_fun(sockfd, addr, addrlen);
             }
@@ -265,7 +265,7 @@ namespace compactrpc
 
         unsigned int sleep(unsigned int seconds)
         {
-            if (compactrpc::g_hook || !compactrpc::Coroutine::GetCoroutineSwapFlag())
+            if (compactrpc::g_hook)
             {
                 return g_sys_sleep_fun(seconds);
             }
