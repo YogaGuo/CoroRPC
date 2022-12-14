@@ -4,7 +4,7 @@
  * @Autor: Yogaguo
  * @Date: 2022-12-09 21:14:49
  * @LastEditors: Yogaguo
- * @LastEditTime: 2022-12-10 14:21:13
+ * @LastEditTime: 2022-12-14 11:46:28
  */
 #ifndef COMPACTRPC_COROUTINE_H
 #define COMPACTRPC_COROUTINE_H
@@ -98,6 +98,10 @@ namespace compactrpc
         static bool IsMainCoroutine();
 
         std::function<void()> m_call_back();
+
+        static void setCoroutineSwapFlag(bool v);
+
+        static bool GetCoroutineSwapFlag();
 
     private:
         Coroutine();

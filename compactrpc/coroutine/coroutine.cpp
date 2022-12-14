@@ -4,7 +4,7 @@
  * @Autor: Yogaguo
  * @Date: 2022-12-10 11:13:09
  * @LastEditors: Yogaguo
- * @LastEditTime: 2022-12-10 14:26:23
+ * @LastEditTime: 2022-12-14 11:48:05
  */
 #include <stdlib.h>
 #include <assert.h>
@@ -24,6 +24,7 @@ namespace compactrpc
 
     static thread_local RunTime *t_cur_run_time = nullptr;
 
+    static thread_local bool t_enable_corouine_swap = true;
     static std::atomic_int t_cur_coroutine_count{0};
 
     static std::atomic_int t_cur_coroutine_id{0};
@@ -38,6 +39,15 @@ namespace compactrpc
         return t_cur_run_time = v;
     }
 
+    void Coroutine::setCoroutineSwapFlag(bool v)
+    {
+        t_enable_corouine_swap = v;
+    }
+
+    bool Coroutine::GetCoroutineSwapFlag()
+    {
+        return t_enable_corouine_swap;
+    }
     void CoFunction(Coroutine *co)
     {
         if (co)
@@ -143,6 +153,11 @@ namespace compactrpc
     // form taget cor back to main cor
     void Coroutine::Yield()
     {
+        if (!t_enable_corouine_swap)
+        {
+            ErrorLog << "can't yield, because  disable cor swap";
+            return;
+        }
         if (t_main_coroutine == nullptr)
         {
             ErrorLog << "main cor is nullptr";
