@@ -4,14 +4,14 @@
  * @Autor: Yogaguo
  * @Date: 2022-12-14 14:14:26
  * @LastEditors: Yogaguo
- * @LastEditTime: 2022-12-14 14:36:15
+ * @LastEditTime: 2022-12-15 12:41:04
  */
 #include <queue>
 #include <vector>
 #include "compactrpc/net/tcp/abstract_slot.h"
 #include "compactrpc/net/reactor.h"
 #include "compactrpc/net/timer.h"
-
+#include "compactrpc/comm/log.h"
 namespace compactrpc
 {
     class TcpConnection;
@@ -19,6 +19,12 @@ namespace compactrpc
     class TcpTimeWheel
     {
     public:
+        /**
+         * @brief ??Tcpconnction ????AbstractSlot,
+         *        TcpConnectionSlot::ptr == std::shared<AbstractSlot>
+         *        ??? ?????????????std::shared<AbstractSlot> ????Tcpconne??
+         *
+         */
         typedef std::shared_ptr<TcpTimeWheel> ptr;
         typedef AbstractSlot<TcpConnection> TcpConnectionSlot;
 
@@ -33,9 +39,9 @@ namespace compactrpc
     private:
         Reactor *m_reactor{nullptr};
         int m_bucket_count{0};
-        int m_inteval{0}; // √Î
+        int m_inteval{0}; // ?????????????? ??????????
 
-        TimeEvent::ptr m_event;
+        TimerEvent::ptr m_event;
 
         std::queue<std::vector<TcpConnectionSlot::ptr>> m_wheel;
     };

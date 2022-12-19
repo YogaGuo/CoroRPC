@@ -18,8 +18,8 @@ namespace compactrpc
             m_wheel.push(tmp);
         }
 
-        m_event = std::make_shared<TimeEvent>(m_inteval * 1000, true,
-                                              std::bind(&TcpTimeWheel::loopFunc(), this));
+        m_event = std::make_shared<TimerEvent>(m_inteval * 1000, true,
+                                               std::bind(TcpTimeWheel::loopFunc, this));
         m_reactor->getTimer()->addTimeEvent(m_event);
     }
 
