@@ -146,7 +146,7 @@ namespace compactrpc
     {
         for (auto pth : m_io_threads)
         {
-            pth->getRector()->addTask(cd, true);
+            pth->getRector()->addTask(cb, true);
         }
     }
 
@@ -154,7 +154,7 @@ namespace compactrpc
     {
         if (index >= 0 && index < m_size)
         {
-            m_io_threads[index]->getRector()->addTask(cd, true);
+            m_io_threads[index]->getRector()->addTask(cb, true);
         }
         return;
     }
@@ -188,7 +188,7 @@ namespace compactrpc
 
     Coroutine::ptr IOThreadPool::addCoroutineToRandomThread(std::function<void()> cb, bool self)
     {
-        Coroutine::ptr cor = compactrpc::Coroutine::getCoroutinePool()->getCoroutineInstance();
+        Coroutine::ptr cor = getCoroutinePool()->getCoroutineInstance();
         cor->setCallBack(cb);
         addCoroutineToRandomThread(cor, self);
         return cor;
@@ -201,7 +201,7 @@ namespace compactrpc
             ErrorLog << "addCoroutineToThreadByIndex error, invalid io_thread index[ " << index << " ]";
             return nullptr;
         }
-        Coroutine::ptr cor = compactrpc::Coroutine::getCoroutinePool()->getCoroutineInstance();
+        Coroutine::ptr cor = getCoroutinePool()->getCoroutineInstance();
         cor->setCallBack(cb);
         m_io_threads[index]->getRector()->addCoroutine(cor, true);
         return cor;
@@ -211,7 +211,7 @@ namespace compactrpc
     {
         for (auto pth : m_io_threads)
         {
-            Coroutine::ptr cor = compactrpc::Coroutine::getCoroutinePool()->getCoroutineInstance();
+            Coroutine::ptr cor = getCoroutinePool()->getCoroutineInstance();
             cor->setCallBack(cb);
             pth->getRector()->addCoroutine(cor, true);
         }

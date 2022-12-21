@@ -4,7 +4,7 @@
  * @Autor: Yogaguo
  * @Date: 2022-12-20 17:49:09
  * @LastEditors: Yogaguo
- * @LastEditTime: 2022-12-21 12:57:42
+ * @LastEditTime: 2022-12-21 13:36:24
  */
 #ifndef COMPACTRPC_IO_THREAD_H
 #define COMPACTRPC_IO_THREAD_H
@@ -16,6 +16,7 @@
 #include <functional>
 #include <semaphore.h>
 #include <pthread.h>
+#include <vector>
 #include "compactrpc/net/reactor.h"
 #include "compactrpc/net/tcp/tcp_conn_time_wheel.h"
 #include "compactrpc/coroutine/coroutine.h"
@@ -91,7 +92,7 @@ namespace compactrpc
 
         void addCoroutineToEachThread(std::function<void> cb);
 
-        void addCoroutineToThreadByIndex(int index, std::function<void()> cb, bool self = false);
+        Coroutine::ptr addCoroutineToThreadByIndex(int index, std::function<void()> cb, bool self = false);
 
     private:
         int m_size{0};
