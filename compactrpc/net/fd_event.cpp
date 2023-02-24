@@ -4,7 +4,7 @@
  * @Autor: Yogaguo
  * @Date: 2022-12-12 10:15:59
  * @LastEditors: Yogaguo
- * @LastEditTime: 2022-12-13 11:20:23
+ * @LastEditTime: 2023-02-22 17:22:54
  */
 #include "fd_event.h"
 
@@ -49,7 +49,7 @@ namespace compactrpc
             ErrorLog << "error flag";
     }
 
-    std::function<void()> FdEvent::getCallback() const
+    std::function<void()> FdEvent::getCallback(IOEvent flag) const
     {
         if (flag == READ)
         {
@@ -99,7 +99,7 @@ namespace compactrpc
     {
         if (!m_reactor)
             m_reactor = compactrpc::Reactor::GetReactor();
-        m_reator->delEvent();
+        m_reactor->delEvent(m_fd);
         m_listen_events = 0;
         m_read_callback = nullptr;
         m_write_callback = nullptr;

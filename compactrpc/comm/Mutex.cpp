@@ -4,7 +4,7 @@
  * @Autor: Yogaguo
  * @Date: 2022-12-09 22:08:03
  * @LastEditors: Yogaguo
- * @LastEditTime: 2022-12-10 11:09:55
+ * @LastEditTime: 2022-12-16 11:42:13
  */
 #include <pthread.h>
 #include <memory>
@@ -51,7 +51,7 @@ namespace compactrpc
             Coroutine *cor = Coroutine::GetCurrentCoroutine();
             // add to tasks, wait next reactor back to resume this coroutine
             std::shared_ptr<Coroutine> tmp(cor);
-            Reactor::GetReactor()->addCoroutine(tmp, false);
+            compactrpc::Reactor::GetReactor()->addCoroutine(tmp, false);
             Coroutine::Yield();
         }
     }

@@ -4,24 +4,24 @@
  * @Autor: Yogaguo
  * @Date: 2022-12-12 10:15:59
  * @LastEditors: Yogaguo
- * @LastEditTime: 2022-12-19 22:03:14
+ * @LastEditTime: 2023-02-22 17:17:54
  */
-#include "reactor.h"
+#include "compactrpc/net/reactor.h"
 #include <string.h>
 #include <assert.h>
 #include <algorithm>
 #include "compactrpc/comm/log.h"
-
+#include "compactrpc/coroutine/coroutine.h"
 extern read_fun_ptr_t g_sys_read_fun; // sys_call read
 extern write_fun_ptr_t g_sys_write_fun;
 
 namespace compactrpc
 {
-    static thread_local Reactor *t_reactor_ptr{nullptr};
+    static thread_local Reactor *t_reactor_ptr = nullptr;
 
-    static thread_local int t_max_epoll_timeout{10000}; // ms
+    static thread_local int t_max_epoll_timeout = 10000; // ms
 
-    static CoroutineTaskQueue *t_coroutine_task_queue{nullptr};
+    static CoroutineTaskQueue *t_coroutine_task_queue = nullptr;
 
     Reactor::Reactor()
     {
@@ -103,14 +103,14 @@ namespace compactrpc
          *      然后线程B在某个时刻会去捞取pending队列里面的fd, 然后添加到自己的epoll中，这样
          *       就避免了加锁, 而如果是线程B自己往自己里面添加fd, 直接添加就行
          */
-        Mutex::Lock(m_mutex);
-        m_pending_add_fds.insert(std::pair<int, epoll_event>(fd, event));
+        Mutex::Lock lock(m_mutex);
+        m_pending_add_fds.insert({fd, event});
 
         if (is_wakeup)
             wakeup();
     }
 
-    void Reactor::delEvent(int fd, bool is_wakeup);
+    void Reactor::delEvent(int fd, bool is_wakeup /*true*/)
     {
         if (fd == -1)
         {
@@ -120,12 +120,12 @@ namespace compactrpc
 
         if (isLoopThread())
         {
-            delEventInLoopTread(fd);
+            delEventLoopInThread(fd);
             return;
         }
 
         Mutex::Lock lock(m_mutex);
-        m_pendind_del_fds.push_back(fd);
+        m_pending_del_fds.push_back(fd);
         if (is_wakeup)
             wakeup();
     }
@@ -136,7 +136,7 @@ namespace compactrpc
             return;
 
         uint64_t tmp = 1;
-        uint_64_t p = &tmp;
+        uint64_t *p = &tmp;
         if (g_sys_write_fun(m_wake_fd, p, 8) != 8)
         {
             ErrorLog << "write wakeupfd[" << m_wake_fd << "] error";
@@ -157,7 +157,7 @@ namespace compactrpc
         epoll_event event;
         event.data.fd = m_wake_fd;
         event.events = EPOLLIN;
-        if (epoll_ctl(m_epfd, op, &event) != 0)
+        if (epoll_ctl(m_epfd, op, m_wake_fd, event) != 0)
         {
             ErrorLog << "epoll_ctl error, fd[" << m_wake_fd << "], errno=" << strerror(errno);
             return;
@@ -190,12 +190,12 @@ namespace compactrpc
         DebugLog << "epoll_ctl add succ, fd[" << fd << "]";
     }
 
-    void Reactor::delEventInLoopThread(int fd)
+    void Reactor::delEventLoopInThread(int fd)
     {
         assert(isLoopThread());
 
         auto it = std::find(m_fds.begin(), m_fds.end(), fd);
-        if (it == m_fd.end())
+        if (it == m_fds.end())
         {
             DebugLog << "fd[" << fd << "] is not in this loop";
             return;
@@ -220,7 +220,7 @@ namespace compactrpc
         }
 
         m_is_looping = true;
-        m_is_flag = false;
+        m_stop_flag = false;
 
         Coroutine *first_cor = nullptr;
 
@@ -242,7 +242,7 @@ namespace compactrpc
 
                 while (1)
                 {
-                    ptr = CoroutineTaskQueue::GetCorouineTaskQueue()->pop();
+                    ptr = CoroutineTaskQueue::GetCoroutineTaskQueue()->pop();
                     if (ptr)
                     {
                         ptr->setReactor(this);
@@ -255,7 +255,7 @@ namespace compactrpc
                 }
             }
             Mutex::Lock lock(m_mutex);
-            std::vector<std::function<void>()> tmp_tasks;
+            std::vector<std::function<void()>> tmp_tasks;
             tmp_tasks.swap(m_pending_task);
             lock.unlock();
 
@@ -301,62 +301,62 @@ namespace compactrpc
                             if (!((one_event.events & EPOLLIN)) && (!(one_event.events & EPOLLOUT)))
                             {
                                 ErrorLog << "socket [" << fd << "] occur other unkown event : [" << one_event.events << "], need unregister this socket";
-                                delEventInLoopThread(fd);
+                                delEvenInLoopThread(fd);
                             }
-                        }
-                        else
-                        { // 如果之前注册了协程，pending cor to comm cor_tasks
-                            if (ptr->getCoroutine())
-                            {
-                                /**
-                                 * @brief:第一个协程(epoll返回的时候， 有多个fd就绪， 每个fd 就是一个待执行
-                                 *      的协程
-                                 * 第一个协程就由当前线程来调度；如果还有其他协程， 再把它们放到全局协程任务队列里
-                                 * 这样的目的是：尽量减少访问全局协程队列，毕竟队列要需要加锁的
-                                 */
-                                if (!first_cor)
+                            else
+                            { // 如果之前注册了协程，pending cor to comm cor_tasks
+                                if (ptr->getCoroutine())
                                 {
-                                    first_cor = ptr->getCoroutine();
-                                    continue;
-                                }
-                                if (m_reactor_type == SubReactor)
-                                {
-                                    delEventInLoopThread(fd);
-                                    ptr->setReactor(nullptr);
-                                    CoroutineTaskQueue::GetCoroutineTaskQueue()->push(ptr);
+                                    /**
+                                     * @brief:第一个协程(epoll返回的时候， 有多个fd就绪， 每个fd 就是一个待执行
+                                     *      的协程
+                                     * 第一个协程就由当前线程来调度；如果还有其他协程， 再把它们放到全局协程任务队列里
+                                     * 这样的目的是：尽量减少访问全局协程队列，毕竟队列要需要加锁的
+                                     */
+                                    if (!first_cor)
+                                    {
+                                        first_cor = ptr->getCoroutine();
+                                        continue;
+                                    }
+                                    if (m_reactor_type == SubReactor)
+                                    {
+                                        delEvenInLoopThread(fd);
+                                        ptr->setReactor(nullptr);
+                                        CoroutineTaskQueue::GetCoroutineTaskQueue()->push(ptr);
+                                    }
+                                    else
+                                    {
+                                        // main reactor, just resume this cor, that is accept_cor and exec Main reactor only have this cor
+                                        compactrpc::Coroutine::Resume(ptr->getCoroutine());
+                                        if (first_cor)
+                                        {
+                                            first_cor = nullptr;
+                                        }
+                                    }
                                 }
                                 else
                                 {
-                                    // main reactor, just resume this cor, that is accept_cor and exec Main reactor only have this cor
-                                    compactrpc::Coroutine::Resume(ptr->getCoroutine());
-                                    if (first_cor)
-                                    {
-                                        first_cor = nullptr;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                std::function<void()> read_cb;
-                                std::function<void()> write_cb;
-                                read_cb = ptr->getCallback(READ);
-                                write_cb = ptr->getCallback(WRITE);
+                                    std::function<void()> read_cb;
+                                    std::function<void()> write_cb;
+                                    read_cb = ptr->getCallback(READ);
+                                    write_cb = ptr->getCallback(WRITE);
 
-                                // if time event arrvie, exec
-                                if (fd == m_time_fd)
-                                {
-                                    read_cb();
-                                    continue;
-                                }
-                                if (one_event.events & EPOLLIN)
-                                {
-                                    Mutex::Lock lock(m_mutex);
-                                    m_pendging_tasks.push_back(read_cb);
-                                }
-                                if (one_event.events & EPOLLOUT)
-                                {
-                                    Mutex::Lock lock(m_mutex);
-                                    m_pendging_tasks.push_back(write_cb);
+                                    // if time event arrvie, exec
+                                    if (fd == m_timer_fd)
+                                    {
+                                        read_cb();
+                                        continue;
+                                    }
+                                    if (one_event.events & EPOLLIN)
+                                    {
+                                        Mutex::Lock lock(m_mutex);
+                                        m_pending_task.push_back(read_cb);
+                                    }
+                                    if (one_event.events & EPOLLOUT)
+                                    {
+                                        Mutex::Lock lock(m_mutex);
+                                        m_pending_task.push_back(write_cb);
+                                    }
                                 }
                             }
                         }
@@ -379,9 +379,9 @@ namespace compactrpc
                 {
                     addEventInLoopThread(it->first, it->second);
                 }
-                for (auto it = tmp_del.begin(); it != it.end(); it++)
+                for (auto it = tmp_del.begin(); it != tmp_del.end(); it++)
                 {
-                    delEventInLoopThread(*it);
+                    delEvenInLoopThread(*it);
                 }
             }
         }
@@ -402,7 +402,7 @@ namespace compactrpc
     {
         {
             Mutex::Lock lock(m_mutex);
-            m_pending_tasks.push_back(task);
+            m_pending_task.push_back(task);
         }
         if (is_wake)
         {
@@ -410,25 +410,28 @@ namespace compactrpc
         }
     }
 
-    void Reactor::addTask(std::vector<std::function<void()>> tasks, bool is_wake)
+    void Reactor::addTask(std::vector<std::function<void()>> tasks, bool is_wakeup)
     {
         if (tasks.size() == 0)
             return;
         {
             Mutex::Lock lock(m_mutex);
-            m_pending_tasks.insert(m_pending_tasks.end(), tasks.begin(), tasks.end());
+            m_pending_task.insert(m_pending_task.end(), tasks.begin(), tasks.end());
         }
-        if (is_wake)
+        if (is_wakeup)
         {
             wakeup();
         }
     }
 
-    void Reactor::addCoroutine(compactrpc::Coroutine::ptr cor, bool is_wakeup /*true*/){
-        auto func = [cor]
+    void Reactor::addCoroutine(compactrpc::Coroutine::ptr cor, bool is_wakeup /*true*/)
+    {
+        auto func = [cor]()
         {
             compactrpc::Coroutine::Resume(cor.get());
-        } addTask(func, is_wakeup)}
+        };
+        addTask(func, is_wakeup);
+    }
 
     Timer *Reactor::getTimer()
     {
@@ -447,7 +450,7 @@ namespace compactrpc
 
     void Reactor::setReactorType(ReactorType type)
     {
-        m_raector_type = type;
+        m_reactor_type = type;
     }
 
     CoroutineTaskQueue *CoroutineTaskQueue::GetCoroutineTaskQueue()
@@ -471,9 +474,9 @@ namespace compactrpc
     {
         FdEvent *fd_ptr = nullptr;
         Mutex::Lock lock(m_mutex);
-        if (m.task.size() >= 1)
+        if (m_task.size() >= 1)
         {
-            re = m_task.front();
+            fd_ptr = m_task.front();
             m_task.pop();
         }
         lock.unlock();

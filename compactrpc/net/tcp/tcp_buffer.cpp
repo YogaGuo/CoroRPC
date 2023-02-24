@@ -4,7 +4,7 @@
  * @Autor: Yogaguo
  * @Date: 2023-01-03 19:41:20
  * @LastEditors: Yogaguo
- * @LastEditTime: 2023-01-03 22:16:56
+ * @LastEditTime: 2023-01-14 22:08:42
  */
 #include <unistd.h>
 #include "compactrpc/net/tcp/tcp_buffer.h"
@@ -52,12 +52,12 @@ namespace compactrpc
 
     void TcpBuffer::adjustBuffer()
     {
-        if (m_read_index > static_cast<int>(m_buffer / 3))
+        if (m_read_index > static_cast<int>(m_buffer.size() / 3))
         {
             std::vector<char> new_buffer(m_buffer.size());
 
             int count = readAble();
-            memcpy(&new_buffer[0], m_buffer[m_read_index], count);
+            memcpy(&new_buffer[0], &m_buffer[m_read_index], count);
 
             m_buffer.swap(new_buffer);
             m_write_index = count;
@@ -135,7 +135,9 @@ namespace compactrpc
 
     std::string TcpBuffer::getBufferString()
     {
-        std::string re(readAble());
+        int size = readAble();
+        std::string re;
+        re.resize(size);
         memcpy(&re[0], &m_buffer[m_read_index], readAble());
         return re;
     }

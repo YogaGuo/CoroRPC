@@ -1,3 +1,11 @@
+/*
+ * @Description:
+ * @Version: 2.0
+ * @Autor: Yogaguo
+ * @Date: 2023-02-19 16:35:21
+ * @LastEditors: Yogaguo
+ * @LastEditTime: 2023-02-22 17:51:45
+ */
 #ifndef COMPACTRPC_COMM_ERRORCODE_H
 #define COMPACTRPC_COMM_ERRORCODE_H
 

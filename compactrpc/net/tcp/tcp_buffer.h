@@ -32,7 +32,7 @@ namespace compactrpc
 
         void readFromBuffer(std::vector<char> &re, int size);
 
-        void writeToBuffer(const char &buf, int size);
+        void writeToBuffer(const char* buf, int size);
 
         void resizeBuffer(int size);
 

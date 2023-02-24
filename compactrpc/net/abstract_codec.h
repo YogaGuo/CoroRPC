@@ -4,7 +4,7 @@
  * @Autor: Yogaguo
  * @Date: 2023-01-12 21:11:43
  * @LastEditors: Yogaguo
- * @LastEditTime: 2023-01-12 22:05:45
+ * @LastEditTime: 2023-02-24 17:14:38
  */
 #ifndef COMPACTRPC_ABSTRACT_CODEC_H
 #define COMPACTRPC_ABSTRACT_CODEC_H
@@ -21,12 +21,12 @@ namespace compactrpc
         Http_Protocal = 2
     };
 
-    class AbstractCodec
+    class AbstractCodeC
     {
     public:
-        std::shared_ptr<AbstractCodec> ptr;
-        AbstractCodec() {}
-        virtual ~AbstractCodec();
+        typedef std::shared_ptr<AbstractCodeC> ptr;
+        AbstractCodeC() {}
+        virtual ~AbstractCodeC();
         /**
          * @brief :将AbstractData格式数据包编码后输入buf中
          *

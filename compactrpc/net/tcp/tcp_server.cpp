@@ -4,7 +4,7 @@
  * @Autor: Yogaguo
  * @Date: 2022-12-20 16:01:41
  * @LastEditors: Yogaguo
- * @LastEditTime: 2022-12-22 15:56:09
+ * @LastEditTime: 2023-02-24 17:28:31
  */
 #include <string.h>
 #include <sys/socket.h>
@@ -12,6 +12,7 @@
 #include "tcp_server.h"
 #include "compactrpc/comm/config.h"
 #include "compactrpc/coroutine/coroutine_pool.h"
+#include "compactrpc/net/tinypb/tinypb_rpc_dispatcher.h"
 namespace compactrpc
 {
     extern compactrpc::Config::ptr gRpConfig;
@@ -53,7 +54,7 @@ namespace compactrpc
     }
     TcpAcceptor::~TcpAcceptor()
     {
-        FdEvent::ptr fd_event = FdEventContianer()::GetFdContianer()->getFdEvent(m_fd);
+        FdEvent::ptr fd_event = FdEventContianer::GetFdContianer()->getFdEvent(m_fd);
         fd_event->unregisterFromReactor();
         if (m_fd != -1)
         {
@@ -113,11 +114,13 @@ namespace compactrpc
         m_io_pool = std::make_shared<IOThreadPool>(gRpcConfig->m_iothread_num);
         if (type == Http_Protocal)
         {
-            /* to do sth*/
+            // m_dispatcher = std::make_shared<HttpDis>
         }
         else
         {
-            /* to do sth*/
+            m_dispatcher = std::make_shared<TinyPbRpcDispacther>();
+            m_codec = std::make_shared<TinyPbCodeC>();
+            m_protocal_type = TinyPb_Protocal;
         }
 
         m_main_reactor = compactrpc::Reactor::GetReactor();
@@ -178,15 +181,32 @@ namespace compactrpc
         m_main_reactor->addCoroutine(cor);
     }
 
-    /**
-     * @brief to do sth;
-     *
-     */
+    bool TcpServer::regiterServer(std::shared_ptr<google::protobuf::Service> service)
+    {
+        if (m_protocal_type == TinyPb_Protocal)
+        {
+            if (service)
+            {
+                dynamic_cast<TinyPbRpcDispacther *>(m_dispatcher.get())->registerService(service);
+            }
+            else
+            {
+                ErrorLog << "register service error, service ptr is nullptr";
+                return false;
+            }
+        }
+        else
+        {
+            ErrorLog << "register service error, Just TinyPb protocal server need to register Service";
+            return false;
+        }
+        return true;
+    }
 
     TcpConnection::ptr TcpServer::addClient(IOThread *io_thread, int fd)
     {
         auto it = m_clients.find(fd);
-        if (it != m_clients)
+        if (it != m_clients.end())
         {
             it->second.reset();
             DebugLog << "fd " << fd << "have already exit, reset it";
@@ -208,7 +228,7 @@ namespace compactrpc
         {
             this->getTimeWheel()->fresh(slot);
         };
-        m_main_reactor->addTask(cd);
+        m_main_reactor->addTask(cb);
     }
 
     /**
@@ -242,8 +262,9 @@ namespace compactrpc
         return m_time_wheel;
     }
 
-    /**
-     *  to do sth
-     *
-     */
+    IOThreadPool::ptr TcpServer::getIOThreadPool()
+    {
+        return m_io_pool;
+    }
+
 }

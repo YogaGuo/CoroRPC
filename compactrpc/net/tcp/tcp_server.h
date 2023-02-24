@@ -4,7 +4,7 @@
  * @Autor: Yogaguo
  * @Date: 2022-12-20 16:01:41
  * @LastEditors: Yogaguo
- * @LastEditTime: 2022-12-22 15:54:29
+ * @LastEditTime: 2023-02-24 17:29:25
  */
 #ifndef COMPACTRPC_TCP_SERVER_H
 #define COMPACTRPC_TCP_SERVER_H
@@ -16,7 +16,12 @@
 #include "compactrpc/net/net_address.h"
 #include "compactrpc/net/timer.h"
 #include "compactrpc/net/tcp/tcp_conn_time_wheel.h"
+#include "compactrpc/net/tcp/tcp_connection.h"
 #include "compactrpc/net/tcp/io_thread.h"
+#include "compactrpc/net/abstract_codec.h"
+#include "compactrpc/net/abstract_data.h"
+#include "compactrpc/net/abstract_dispatch.h"
+// #include"compactrpc/net/http
 namespace compactrpc
 {
     class TcpAcceptor
@@ -72,14 +77,15 @@ namespace compactrpc
         void freshTcpConnection(TcpTimeWheel::TcpConnectionSlot::ptr slot);
 
     public:
-        // AbstractDispathcher::ptr getDispatcher();
-        // AbstractCodec::ptr getCodec();
+        AbstractDispatcher::ptr getDispatcher();
+
+        AbstractCodeC::ptr getCodec();
 
         NetAddress::ptr getPeerAddr();
 
         NetAddress::ptr getLocalAddr();
 
-        NetAddress::ptr getIOThreadPool();
+        IOThreadPool::ptr getIOThreadPool();
 
         TcpTimeWheel::ptr getTimeWheel();
 
@@ -100,9 +106,12 @@ namespace compactrpc
 
         Coroutine::ptr m_accepet_cor;
 
-        /*
-         to do sth;
-        */
+        AbstractDispatcher::ptr m_dispatcher;
+
+        AbstractCodeC::ptr m_codec;
+
+        IOThreadPool::ptr m_io_pool;
+
         ProtocalType m_protocal_type{Typepb_Protocal};
 
         TcpTimeWheel::ptr m_time_wheel;

@@ -4,7 +4,7 @@
  * @Autor: Yogaguo
  * @Date: 2022-12-10 11:13:09
  * @LastEditors: Yogaguo
- * @LastEditTime: 2022-12-14 12:01:56
+ * @LastEditTime: 2023-02-21 18:30:10
  */
 #include <stdlib.h>
 #include <assert.h>
@@ -33,12 +33,15 @@ namespace compactrpc
         return t_cur_coroutine_id;
     }
 
-    RunTime *setCurrentRuntime(RunTime *v)
+    void setCurrentRuntime(RunTime *v)
     {
-        return t_cur_run_time = v;
+        t_cur_run_time = v;
     }
-
-       void CoFunction(Coroutine *co)
+    RunTime *getCurrentRunTime()
+    {
+        return t_cur_run_time;
+    }
+    void CoFunction(Coroutine *co)
     {
         if (co)
         {

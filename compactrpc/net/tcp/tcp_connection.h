@@ -4,7 +4,7 @@
  * @Autor: Yogaguo
  * @Date: 2023-01-03 18:57:35
  * @LastEditors: Yogaguo
- * @LastEditTime: 2023-01-12 18:37:29
+ * @LastEditTime: 2023-02-24 16:58:09
  */
 #ifndef COMPACTRPC_TCP_CONNECTION_H
 #define COMPACTRPC_TCP_CONNECTION_H
@@ -17,6 +17,8 @@
 #include "compactrpc/comm/log.h"
 #include "compactrpc/net/fd_event.h"
 #include "compactrpc/net/timer.h"
+#include "compactrpc/net/tinypb/tinypb_codec.h"
+#include "compactrpc/net/abstract_codec.h"
 #include "compactrpc/net/tcp/tcp_client.h"
 #include "compactrpc/net/tcp/tcp_server.h"
 #include "compactrpc/net/tcp/io_thread.h"
@@ -41,7 +43,7 @@ namespace compactrpc
         typedef std::shared_ptr<TcpConnection> ptr;
         TcpConnection(compactrpc::TcpServer *tcp_server, compactrpc::IOThread *io_thread, int fd, int buff_size, NetAddress::ptr peer_addr);
 
-        TcpConnection(compactrpc::TcpClient *tcp_client, compactrpc::Reactor *reactor, int fd, iny buff_size, NetAddress::ptr peer_addr);
+        TcpConnection(compactrpc::TcpClient *tcp_client, compactrpc::Reactor *reactor, int fd, int buff_size, NetAddress::ptr peer_addr);
 
         void setUpServer();
 
@@ -111,7 +113,7 @@ namespace compactrpc
 
         Coroutine::ptr m_loop_cor;
 
-        TinyPbCodeC::ptr m_codec;
+        AbstractCodeC::ptr m_codec;
 
         FdEvent::ptr m_fd_event;
 

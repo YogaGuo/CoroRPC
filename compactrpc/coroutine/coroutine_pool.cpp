@@ -4,7 +4,7 @@
  * @Autor: Yogaguo
  * @Date: 2022-12-10 14:30:13
  * @LastEditors: Yogaguo
- * @LastEditTime: 2022-12-11 14:22:44
+ * @LastEditTime: 2022-12-22 13:13:23
  */
 
 #include <sys/mman.h>
@@ -18,7 +18,7 @@ namespace compactrpc
 
     static CoroutinePool *t_coroutine_container_ptr = nullptr;
 
-    CoroutinePool *getCoroutinePool()
+    CoroutinePool *GetCoroutinePool()
     {
         if (!t_coroutine_container_ptr)
             t_coroutine_container_ptr = new CoroutinePool(gRpcConfig->m_cor_size,

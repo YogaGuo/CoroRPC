@@ -4,13 +4,14 @@
  * @Autor: Yogaguo
  * @Date: 2023-01-03 19:03:13
  * @LastEditors: Yogaguo
- * @LastEditTime: 2023-01-12 19:08:05
+ * @LastEditTime: 2023-02-24 19:10:53
  */
 #include "compactrpc/net/tcp/tcp_connection.h"
 #include <unistd.h>
 #include <string.h>
-// #include "compactrpc/net/...."
-// #include "compactrpc/net/..."
+#include "compactrpc/net/http/http_codec.h"
+#include "compactrpc/net/tcp/tcp_server.h"
+#include "compactrpc/net/tcp/tcp_client.h"
 #include "compactrpc/coroutine/coroutine_pool.h"
 #include "compactrpc/coroutine/coroutine_hook.h"
 #include "compactrpc/net/timer.h"
@@ -25,7 +26,7 @@ namespace compactrpc
 
         m_tcp_server = tcp_ser;
 
-        m_codeC = m_tcp_server->getCodeC();
+        m_codec = m_tcp_server->getCodeC();
         m_fd_event = FdEventContianer::GetFdContianer()->getFdEvent(fd);
         m_fd_event->setReactor(m_reactor);
         initBuffer(buff_size);
@@ -83,8 +84,8 @@ namespace compactrpc
 
     void TcpConnection::initBuffer(int size)
     {
-        m_write_buffer = std::make_shared<TcpBuff>(size);
-        m_read_buffer = std::make_shared<TcpBuff>(size);
+        m_write_buffer = std::make_shared<TcpBuffer>(size);
+        m_read_buffer = std::make_shared<TcpBuffer>(size);
     }
 
     void TcpConnection::MainServerLoopCorFunc()
@@ -195,6 +196,37 @@ namespace compactrpc
 
     void TcpConnection::execute()
     {
+        while (m_read_buffer->readAble() > 0)
+        {
+            std::shared_ptr<AbstractData> data;
+            if (m_codec->getProtocalType() == TinyPb_Protocal)
+            {
+                data = std::make_shared<TinyPbStruct>();
+            }
+            else
+            {
+                data = std::make_shared<HttpRequest>();
+            }
+            m_codec->decode(m_read_buffer.get(), data.get());
+            if (!data->decode_succ)
+            {
+                ErrorLog << "it parse request error of fd " << m_fd;
+                break;
+            }
+
+            if (m_connection_type = ServerConnection)
+            {
+                m_tcp_server->getDispatcher()->dispatch(data.get(), this);
+            }
+            else if (m_connection_type == ClientConnection)
+            {
+                std::shared_ptr<TinyPbStruct> tmp = std::dynamic_pointer_cast<TinyPbStruct>(data);
+                if (tmp)
+                {
+                    m_reply_datas.insert({tmp->msg_req, tmp});
+                }
+            }
+        }
     }
 
     void TcpConnection::output()
@@ -292,10 +324,20 @@ namespace compactrpc
 
     bool TcpConnection::getResPackageData(const std::string &msg_req, TinyPbStruct::pb_ptr &pb_strcut)
     {
+        auto it = m_reply_datas.find(msg_req);
+        if (it != m_reply_datas.end())
+        {
+            DebugLog << "return a result";
+            pb_strcut = it->second;
+            return true;
+        }
+        DebugLog << msg_req << "| reply_data not exist";
+        return false;
     }
 
     AbstractCodeC::ptr TcpConnection::getCodeC() const
     {
+        return m_codec;
     }
 
     TcpConnectionState TcpConnection::getState()

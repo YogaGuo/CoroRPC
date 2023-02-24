@@ -8,7 +8,7 @@ namespace compactrpc
     class MsgReqUtil
     {
     public:
-        static std::string genMsgNumber();
+        static std::string getMsgNumber();
     };
 
 }

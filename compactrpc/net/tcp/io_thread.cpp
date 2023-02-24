@@ -92,7 +92,7 @@ namespace compactrpc
          *
          */
         sem_wait(&thread->m_start_semaphore);
-        sem_destroy(&thread - < m_start_semaphore);
+        sem_destroy(&thread->m_start_semaphore);
 
         DebugLog << "IOThread" << thread->m_tid << "begin to loop";
         t_reactor_ptr->loop();

@@ -4,7 +4,7 @@
  * @Autor: Yogaguo
  * @Date: 2022-12-10 14:30:13
  * @LastEditors: Yogaguo
- * @LastEditTime: 2022-12-11 14:08:24
+ * @LastEditTime: 2022-12-22 17:36:27
  */
 #include <vector>
 #include "compactrpc/coroutine/coroutine.h"
@@ -37,5 +37,7 @@ namespace compactrpc
         std::vector<Memory::ptr> m_memory_pool;
     };
 
-    CoroutinePool *getCoroutinePool();
+    CoroutinePool *getCoroutinePool()
+    {
+    }
 }

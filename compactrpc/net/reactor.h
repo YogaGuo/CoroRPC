@@ -4,7 +4,7 @@
  * @Autor: Yogaguo
  * @Date: 2022-12-12 10:15:59
  * @LastEditors: Yogaguo
- * @LastEditTime: 2022-12-19 16:54:29
+ * @LastEditTime: 2023-02-21 21:56:44
  */
 #ifndef COMPACTRPC_REACTOR_H
 #define COMPACTRPC_REACTOR_H
@@ -22,7 +22,7 @@
 #include "compactrpc/coroutine/coroutine.h"
 #include "compactrpc/comm/Mutex.h"
 #include <sys/epoll.h>
-namespace cpmpactrpc
+namespace compactrpc
 {
     enum ReactorType
     {
@@ -62,7 +62,7 @@ namespace cpmpactrpc
 
         pid_t getTid();
 
-        void setReactor(ReactorType type);
+        void setReactorType(ReactorType type);
 
     public:
         static Reactor *GetReactor();
@@ -74,7 +74,7 @@ namespace cpmpactrpc
 
         void addEventInLoopThread(int fd, epoll_event event);
 
-        void delEventLoopInThread(int fd);
+        void delEvenInLoopThread(int fd);
 
     private:
         int m_epfd{-1};
@@ -93,7 +93,7 @@ namespace cpmpactrpc
 
         compactrpc::Mutex m_mutex;
 
-        Timer *timer{nullptr};
+        Timer *m_timer{nullptr};
 
         ReactorType m_reactor_type{SubReactor};
 
@@ -109,6 +109,7 @@ namespace cpmpactrpc
         std::map<int, epoll_event> m_pending_add_fds;
 
         std::vector<int> m_pending_del_fds;
+
         std::vector<std::function<void()>> m_pending_task;
     };
 
@@ -117,11 +118,14 @@ namespace cpmpactrpc
     public:
         static CoroutineTaskQueue *GetCoroutineTaskQueue();
 
+        void push(FdEvent *fd);
+
+        FdEvent *pop();
+
     private:
-        compactrpc::Mutex m_mutex;
+        Mutex m_mutex;
 
         std::queue<FdEvent *> m_task;
     };
 }
-
 #endif
