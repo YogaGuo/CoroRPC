@@ -1,5 +1,5 @@
 /*
- * @Description: 
+ * @Description:
  * @Version: 2.0
  * @Autor: Yogaguo
  * @Date: 2022-12-10 14:57:22
@@ -10,8 +10,15 @@
 namespace compactrpc
 {
 
-class Config
-{
-
-};
+    enum LogLevel
+    {
+        DEBUG = 1,
+        INFO = 2,
+        WARN = 3,
+        ERROR = 4,
+        NONE = 5 // dont not print log
+    };
+    class Config
+    {
+    };
 }
