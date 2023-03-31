@@ -18,6 +18,37 @@ namespace compactrpc
 {
 
     extern compactrpc::Config::ptr grpcConfig;
+#define DebugLog                                                                                     \
+    if (compactrpc::OpenLog() && compactrpc::LogLevel::DEBUG >= compactrpc::gRpcConfig->m_log_level) \
+    compactrpc::LogTmp(compactrpc::LogEvent::ptr(new compactrpc::LogEvent(compactrpc::LogLevel::DEBUG, __FILE__, __LINE__, __func__, compactprc::LogType::RPC_LOG))).getStringStream()
+
+#define InfoLog                                                                                     \
+    if (compactrpc::OpenLog() && compactrpc::LogLevel::INFO >= compactrpc::gRpcConfig->m_log_level) \
+    compactrpc::LogTmp(compactrpc::LogEvent::ptr(new compactrpc::LogEvent(compactrpc::LogLevel::INFO, __FILE__, __LINE__, __func__, compactrpc::LogType::RPC_LOG))).getStringStream()
+
+#define WarnLog                                                                                     \
+    if (compactrpc::OpenLog() && compactrpc::LogLevel::WARN >= compactrpc::gRpcConfig->m_log_level) \
+    compactrpc::LogTmp(compactrpc::LogEvent::ptr(new compactrpc::LogEvent(compactrpc::LogLevel::WARN, __FILE__, __LINE__, __func__, compactrpc::LogType::RPC_LOG))).getStringStream()
+
+#define ErrorLog                                                                                     \
+    if (compactrpc::OpenLog() && compactrpc::LogLevel::ERROR >= compactrpc::gRpcConfig->m_log_level) \
+    compactrpc::LogTmp(compactrpc::LogEvent::ptr(new compactrpc::LogEvent(compactrpc::LogLevel::ERROR, __FILE__, __LINE__, __func__, compactrpc::LogType::RPC_LOG))).getStringStream()
+
+#define AppDebugLog                                                                                      \
+    if (compactrpc::OpenLog() && compactrpc::LogLevel::DEBUG >= compactrpc::gRpcConfig->m_app_log_level) \
+    compactrpc::LogTmp(compactrpc::LogEvent::ptr(new compactrpc::LogEvent(compactrpc::LogLevel::DEBUG, __FILE__, __LINE__, __func__, compactrpc::LogType::APP_LOG))).getStringStream()
+
+#define AppInfoLog                                                                                      \
+    if (compactrpc::OpenLog() && compactrpc::LogLevel::INFO >= compactrpc::gRpcConfig->m_app_log_level) \
+    compactrpc::LogTmp(compactrpc::LogEvent::ptr(new compactrpc::LogEvent(compactrpc::LogLevel::INFO, __FILE__, __LINE__, __func__, compactrpc::LogType::APP_LOG))).getStringStream()
+
+#define AppWarnLog                                                                                      \
+    if (compactrpc::OpenLog() && compactrpc::LogLevel::WARN >= compactrpc::gRpcConfig->m_app_log_level) \
+    compactrpc::LogTmp(compactrpc::LogEvent::ptr(new compactrpc::LogEvent(compactrpc::LogLevel::WARN, __FILE__, __LINE__, __func__, compactrpc::LogType::APP_LOG))).getStringStream()
+
+#define AppErrorLog                                                                                      \
+    if (compactrpc::OpenLog() && compactrpc::LogLevel::ERROR >= compactrpc::gRpcConfig->m_app_log_level) \
+    compactrpc::LogTmp(compactrpc::LogEvent::ptr(new compactrpc::LogEvent(compactrpc::LogLevel::ERROR, __FILE__, __LINE__, __func__, compactrpc::LogType::APP_LOG))).getStringStream()
 
     pid_t gettid();
 
